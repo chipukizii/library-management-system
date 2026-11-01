@@ -2,71 +2,52 @@
 CREATE TYPE "Role" AS ENUM ('PATRON', 'LIBRARIAN');
 
 -- CreateTable
-CREATE TABLE "users" (
-    "id" TEXT NOT NULL,
+CREATE TABLE "User" (
+    "id" SERIAL NOT NULL,
     "email" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
     "role" "Role" NOT NULL DEFAULT 'PATRON',
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "users_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "genres" (
-    "id" TEXT NOT NULL,
+CREATE TABLE "Genre" (
+    "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
-    "description" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "slug" TEXT NOT NULL,
 
-    CONSTRAINT "genres_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Genre_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "books" (
-    "id" TEXT NOT NULL,
+CREATE TABLE "Book" (
+    "id" SERIAL NOT NULL,
     "title" TEXT NOT NULL,
     "author" TEXT NOT NULL,
     "isbn" TEXT NOT NULL,
-    "summary" TEXT,
-    "publishedAt" TIMESTAMP(3),
-    "genreId" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
+    "coverImage" TEXT,
+    "totalCopies" INTEGER NOT NULL DEFAULT 1,
+    "availableCopies" INTEGER NOT NULL DEFAULT 1,
+    "genreId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "books_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "reviews" (
-    "id" TEXT NOT NULL,
-    "rating" INTEGER NOT NULL,
-    "comment" TEXT,
-    "bookId" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "reviews_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Book_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "genres_name_key" ON "genres"("name");
+CREATE UNIQUE INDEX "Genre_name_key" ON "Genre"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "books_isbn_key" ON "books"("isbn");
+CREATE UNIQUE INDEX "Genre_slug_key" ON "Genre"("slug");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Book_isbn_key" ON "Book"("isbn");
 
 -- AddForeignKey
-ALTER TABLE "books" ADD CONSTRAINT "books_genreId_fkey" FOREIGN KEY ("genreId") REFERENCES "genres"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "reviews" ADD CONSTRAINT "reviews_bookId_fkey" FOREIGN KEY ("bookId") REFERENCES "books"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "reviews" ADD CONSTRAINT "reviews_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Book" ADD CONSTRAINT "Book_genreId_fkey" FOREIGN KEY ("genreId") REFERENCES "Genre"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 

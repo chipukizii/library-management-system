@@ -50,7 +50,9 @@ The Prisma schema defines the following core models and enums:
 
 ## Schema Decisions
 
-### Why `Book` References `Genre` Rather Than Embedding It
+Book references Genre via a genreId foreign key rather than embedding the genre name directly, because many books share one genre and genres are managed independently (renaming a genre should not require updating every book). User stores a `role` field using a Role enum so Postgres and TypeScript both reject any value other than PATRON or LIBRARIAN.
+
+### Architectural Rationale: Why `Book` References `Genre` Rather Than Embedding It
 
 A foundational architectural decision in designing this relational catalog schema was modeling `Genre` as a standalone table referenced by `Book` through a foreign key (`genreId`) rather than embedding genre data (e.g., as a free-form string or JSON subdocument) inside the `Book` record.
 
