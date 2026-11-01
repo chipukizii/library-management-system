@@ -3,7 +3,7 @@ import { PrismaClient, Role } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Starting database seeding...');
+  console.log('Starting database seeding...');
 
   // 1. Seed Genres (at least 4 genres required)
   const genresData = [
@@ -29,7 +29,7 @@ async function main() {
     },
   ];
 
-  console.log('📚 Upserting genres...');
+  console.log('Upserting genres...');
   const genres = await Promise.all(
     genresData.map((genre) =>
       prisma.genre.upsert({
@@ -43,7 +43,7 @@ async function main() {
   const genreMap = new Map(genres.map((g) => [g.name, g.id]));
 
   // 2. Seed Users (Roles: PATRON and LIBRARIAN)
-  console.log('👤 Upserting users...');
+  console.log('Upserting users...');
   const librarian = await prisma.user.upsert({
     where: { email: 'librarian@central-library.org' },
     update: {},
@@ -75,7 +75,7 @@ async function main() {
   });
 
   // 3. Seed Books (at least 15 books required across the genres)
-  console.log('📖 Upserting books...');
+  console.log('Upserting books...');
   const booksData = [
     // Science Fiction
     {
@@ -249,7 +249,7 @@ async function main() {
   }
 
   // 4. Seed Reviews (Stretch Task relation demonstration)
-  console.log('⭐ Upserting sample reviews...');
+  console.log('Upserting sample reviews...');
   const duneBook = seededBooks.find((b) => b.isbn === '978-0441172719');
   const sapiensBook = seededBooks.find((b) => b.isbn === '978-0062316097');
 
@@ -279,7 +279,7 @@ async function main() {
     });
   }
 
-  console.log(`✅ Seeding complete!`);
+  console.log('Seeding complete!');
   console.log(`   - Genres inserted: ${genres.length}`);
   console.log(`   - Books inserted: ${seededBooks.length}`);
   console.log(`   - Users inserted: 3 (1 LIBRARIAN, 2 PATRONs)`);
@@ -287,7 +287,7 @@ async function main() {
 
 main()
   .catch((e) => {
-    console.error('❌ Error during seeding:', e);
+    console.error('Error during seeding:', e);
     process.exit(1);
   })
   .finally(async () => {

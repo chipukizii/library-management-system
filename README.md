@@ -4,7 +4,7 @@ A robust data layer for a modern library book catalog system, built using **Nest
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Overview](#overview)
 - [Architecture & Data Models](#architecture--data-models)
@@ -20,13 +20,13 @@ A robust data layer for a modern library book catalog system, built using **Nest
 
 ---
 
-## 🚀 Overview
+## Overview
 
 This repository implements the data persistence layer for the Library Management System. It models patrons, librarians, genres, books, and book reviews with strong referential integrity, type safety, and database-level constraints.
 
 ---
 
-## 🏛 Architecture & Data Models
+## Architecture & Data Models
 
 The Prisma schema defines the following core models and enums:
 
@@ -48,7 +48,7 @@ The Prisma schema defines the following core models and enums:
 
 ---
 
-## 💡 Schema Decisions
+## Schema Decisions
 
 ### Why `Book` References `Genre` Rather Than Embedding It
 
@@ -77,7 +77,7 @@ The primary justifications include:
 
 ---
 
-## 🔄 Prisma vs. Document Database Modeling
+## Prisma vs. Document Database Modeling
 
 ### Reflections on Modeling in Prisma (Relational) vs. a Document Database (e.g., MongoDB)
 
@@ -93,7 +93,7 @@ Coming from a document database (such as MongoDB with Mongoose), modeling in Pri
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```text
 library-management-system/
@@ -112,7 +112,7 @@ library-management-system/
 
 ---
 
-## 🛠 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -167,7 +167,7 @@ This executes `prisma/seed.ts` via `ts-node` and logs insertion confirmations fo
 
 ---
 
-## 🔌 Prisma Service Integration
+## Prisma Service Integration
 
 The application integrates with NestJS through `PrismaService` (`api/src/prisma/prisma.service.ts`):
 
