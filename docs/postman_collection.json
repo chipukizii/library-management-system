@@ -1,0 +1,512 @@
+{
+  "info": {
+    "_postman_id": "a548231c-3b91-4d32-8419-7988357a8291",
+    "name": "Library Management System API",
+    "description": "Complete Postman collection for Library Management System catalog CRUD, pagination, filtering, search, authentication (JWT + bcrypt), role-based access control, user profile, and rate limiting.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "librarian_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "patron_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "genre_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "book_id",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register - Patron",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"patron_member@library.org\",\n  \"password\": \"patronPass123!\",\n  \"role\": \"PATRON\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Register a new patron account with bcrypt password hashing."
+          }
+        },
+        {
+          "name": "Register - Librarian",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"head_librarian@library.org\",\n  \"password\": \"librarianPass123!\",\n  \"role\": \"LIBRARIAN\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Register an administrative librarian account."
+          }
+        },
+        {
+          "name": "Login - Librarian",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.access_token) {",
+                  "  pm.collectionVariables.set('librarian_token', response.access_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"head_librarian@library.org\",\n  \"password\": \"librarianPass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login as librarian to obtain JWT access token (rate-limited via @nestjs/throttler)."
+          }
+        },
+        {
+          "name": "Login - Patron",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.access_token) {",
+                  "  pm.collectionVariables.set('patron_token', response.access_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"patron_member@library.org\",\n  \"password\": \"patronPass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login as patron to obtain JWT access token."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{librarian_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "profile"]
+            },
+            "description": "Stretch task: Read authenticated user profile via @Req() from the JWT token."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Genres",
+      "item": [
+        {
+          "name": "Create Genre",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.id) {",
+                  "  pm.collectionVariables.set('genre_id', response.id.toString());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Cyberpunk Fiction\",\n  \"slug\": \"cyberpunk-fiction\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/genres",
+              "host": ["{{baseUrl}}"],
+              "path": ["genres"]
+            },
+            "description": "Create a new genre category with validated DTO."
+          }
+        },
+        {
+          "name": "Get All Genres",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/genres",
+              "host": ["{{baseUrl}}"],
+              "path": ["genres"]
+            },
+            "description": "Retrieve all genres along with book counts."
+          }
+        },
+        {
+          "name": "Get Genre By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/genres/{{genre_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["genres", "{{genre_id}}"]
+            },
+            "description": "Retrieve a single genre by ID with related books."
+          }
+        },
+        {
+          "name": "Update Genre",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Cyberpunk & High Tech\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/genres/{{genre_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["genres", "{{genre_id}}"]
+            },
+            "description": "Update an existing genre name and auto-regenerate slug."
+          }
+        },
+        {
+          "name": "Delete Genre",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/genres/{{genre_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["genres", "{{genre_id}}"]
+            },
+            "description": "Delete a genre category by ID."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Books",
+      "item": [
+        {
+          "name": "Create Book (Librarian Only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.id) {",
+                  "  pm.collectionVariables.set('book_id', response.id.toString());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{librarian_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Snow Crash\",\n  \"author\": \"Neal Stephenson\",\n  \"isbn\": \"9780553380958\",\n  \"description\": \"In reality, Hiro Protagonist delivers pizza for Uncle Enzo's CosoNostra Pizza Inc., but in the Metaverse he's a warrior prince.\",\n  \"coverImage\": \"https://images.example.com/snow-crash.jpg\",\n  \"totalCopies\": 4,\n  \"availableCopies\": 4,\n  \"genreId\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/books",
+              "host": ["{{baseUrl}}"],
+              "path": ["books"]
+            },
+            "description": "Create a new book in catalog. Guarded by JwtAuthGuard and RolesGuard(Role.LIBRARIAN)."
+          }
+        },
+        {
+          "name": "Get All Books - Default",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/books",
+              "host": ["{{baseUrl}}"],
+              "path": ["books"]
+            },
+            "description": "Retrieve default paginated list of books."
+          }
+        },
+        {
+          "name": "Get All Books - Pagination",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/books?page=1&limit=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["books"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Read paginated books using skip and take."
+          }
+        },
+        {
+          "name": "Get All Books - Search (Title or Author)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/books?search=Tolkien",
+              "host": ["{{baseUrl}}"],
+              "path": ["books"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "Tolkien"
+                }
+              ]
+            },
+            "description": "Case-insensitive search across title and author."
+          }
+        },
+        {
+          "name": "Get All Books - Filter by Genre",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/books?genreId=7",
+              "host": ["{{baseUrl}}"],
+              "path": ["books"],
+              "query": [
+                {
+                  "key": "genreId",
+                  "value": "7"
+                }
+              ]
+            },
+            "description": "Filter books matching specific genreId."
+          }
+        },
+        {
+          "name": "Get All Books - Filter, Search & Pagination",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/books?genreId=5&search=Dune&page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["books"],
+              "query": [
+                {
+                  "key": "genreId",
+                  "value": "5"
+                },
+                {
+                  "key": "search",
+                  "value": "Dune"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Combined query with genreId filtering, title/author search, and pagination."
+          }
+        },
+        {
+          "name": "Get Book By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/books/{{book_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["books", "{{book_id}}"]
+            },
+            "description": "Retrieve single book details including genre relation."
+          }
+        },
+        {
+          "name": "Update Book (Librarian Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{librarian_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"totalCopies\": 8,\n  \"availableCopies\": 8\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/books/{{book_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["books", "{{book_id}}"]
+            },
+            "description": "Update book attributes. Guarded by JwtAuthGuard and RolesGuard(Role.LIBRARIAN)."
+          }
+        },
+        {
+          "name": "Delete Book (Librarian Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{librarian_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/books/{{book_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["books", "{{book_id}}"]
+            },
+            "description": "Delete a book record from catalog. Guarded by JwtAuthGuard and RolesGuard(Role.LIBRARIAN)."
+          }
+        }
+      ]
+    }
+  ]
+}
