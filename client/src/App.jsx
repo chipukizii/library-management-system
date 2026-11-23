@@ -1,7 +1,7 @@
 import React from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
-import HomePage from './pages/HomePage';
-import BookDetail from './pages/BookDetail';
+import HomePage from './HomePage';
+import BookDetail from './BookDetail';
 import { BookOpen } from 'lucide-react';
 
 function App() {
@@ -26,6 +26,8 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/books/:id" element={<BookDetail />} />
+          <Route path="/book/:id" element={<BookDetail />} />
+          <Route path="*" element={<HomePage />} />
         </Routes>
       </main>
     </div>

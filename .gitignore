@@ -1,4 +1,8 @@
 node_modules/
 dist/
 .env
+!.env.example
+!client/.env
+!client/.env.example
+!api/.env.example
 *.log
