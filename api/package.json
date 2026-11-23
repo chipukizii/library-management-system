@@ -6,6 +6,7 @@
     "start": "node dist/src/main.js",
     "start:dev": "ts-node src/main.ts",
     "build": "tsc",
+    "test": "node test-endpoints.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:push": "prisma db push",
