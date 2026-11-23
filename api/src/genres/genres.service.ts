@@ -30,6 +30,7 @@ export class GenresService {
       data: {
         name: createGenreDto.name,
         slug,
+        description: createGenreDto.description,
       },
     });
   }
@@ -50,6 +51,9 @@ export class GenresService {
       where: { id },
       include: {
         books: true,
+        _count: {
+          select: { books: true },
+        },
       },
     });
     if (!genre) {
@@ -61,9 +65,12 @@ export class GenresService {
   async update(id: number, updateGenreDto: UpdateGenreDto) {
     await this.findOne(id);
 
-    const data: { name?: string; slug?: string } = {};
+    const data: { name?: string; slug?: string; description?: string } = {};
     if (updateGenreDto.name !== undefined) {
       data.name = updateGenreDto.name;
+    }
+    if (updateGenreDto.description !== undefined) {
+      data.description = updateGenreDto.description;
     }
     if (updateGenreDto.slug !== undefined) {
       data.slug = updateGenreDto.slug;

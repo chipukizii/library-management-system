@@ -8,5 +8,9 @@ export class CreateGenreDto {
 
   @IsOptional()
   @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
   slug?: string;
 }

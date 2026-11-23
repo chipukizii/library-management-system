@@ -15,6 +15,7 @@ import {
 import { BooksService } from './books.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
+import { QueryBooksDto } from './dto/query-books.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -27,19 +28,14 @@ export class BooksController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.LIBRARIAN)
+  @Roles(Role.LIBRARIAN, 'LIBRARIAN')
   create(@Body() createBookDto: CreateBookDto) {
     return this.booksService.create(createBookDto);
   }
 
   @Get()
-  findAll(
-    @Query('genreId') genreId?: string,
-    @Query('search') search?: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-  ) {
-    return this.booksService.findAll(genreId, search, page, limit);
+  findAll(@Query() query: QueryBooksDto) {
+    return this.booksService.findAll(query);
   }
 
   @Get(':id')
@@ -49,7 +45,7 @@ export class BooksController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.LIBRARIAN)
+  @Roles(Role.LIBRARIAN, 'LIBRARIAN')
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateBookDto: UpdateBookDto,
@@ -59,7 +55,7 @@ export class BooksController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.LIBRARIAN)
+  @Roles(Role.LIBRARIAN, 'LIBRARIAN')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.booksService.remove(id);
   }

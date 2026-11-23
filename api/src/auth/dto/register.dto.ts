@@ -12,6 +12,10 @@ export class RegisterDto {
   password: string;
 
   @IsOptional()
-  @IsEnum(Role, { message: 'Role must be either PATRON or LIBRARIAN' })
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsEnum(Role, { message: 'Role must be PATRON, MEMBER, or LIBRARIAN' })
   role?: Role;
 }

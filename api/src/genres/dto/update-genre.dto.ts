@@ -8,5 +8,9 @@ export class UpdateGenreDto {
 
   @IsOptional()
   @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
   slug?: string;
 }

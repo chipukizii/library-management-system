@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
+import { QueryBooksDto } from './dto/query-books.dto';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
@@ -34,6 +35,7 @@ export class BooksService {
         author: createBookDto.author,
         isbn: createBookDto.isbn,
         description: createBookDto.description ?? '',
+        publishedYear: createBookDto.publishedYear,
         coverImage: createBookDto.coverImage,
         totalCopies: createBookDto.totalCopies,
         availableCopies: createBookDto.availableCopies ?? createBookDto.totalCopies,
@@ -45,36 +47,55 @@ export class BooksService {
     });
   }
 
-  async findAll(genreId?: number | string, search?: string, page?: number | string, limit?: number | string) {
-    const pageNum = Number(page) > 0 ? Number(page) : 1;
-    const limitNum = Number(limit) > 0 ? Number(limit) : 10;
+  async findAll(query?: QueryBooksDto) {
+    const genreId = query?.genreId;
+    const search = query?.search;
+    const pageNum = Number(query?.page) > 0 ? Number(query?.page) : 1;
+    const limitNum = Number(query?.limit) > 0 ? Number(query?.limit) : 10;
     const skip = (pageNum - 1) * limitNum;
     const take = limitNum;
 
     const where: Prisma.BookWhereInput = {};
 
-    if (genreId !== undefined && genreId !== null && genreId !== '') {
+    if (genreId !== undefined && genreId !== null && String(genreId) !== '') {
       where.genreId = Number(genreId);
     }
 
-    if (search) {
+    if (search && search.trim() !== '') {
+      const term = search.trim();
       where.OR = [
-        { title: { contains: String(search), mode: 'insensitive' } },
-        { author: { contains: String(search), mode: 'insensitive' } },
+        { title: { contains: term, mode: 'insensitive' } },
+        { author: { contains: term, mode: 'insensitive' } },
+        { isbn: { contains: term, mode: 'insensitive' } },
       ];
     }
 
-    return this.prisma.book.findMany({
-      where,
-      skip,
-      take,
-      include: {
-        genre: true,
+    const [data, total] = await Promise.all([
+      this.prisma.book.findMany({
+        where,
+        skip,
+        take,
+        include: {
+          genre: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      }),
+      this.prisma.book.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(total / limitNum) || 1;
+
+    return {
+      data,
+      meta: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages,
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+    };
   }
 
   async findOne(id: number) {

@@ -23,13 +23,18 @@ export class UpdateBookDto {
   @IsOptional()
   description?: string;
 
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  publishedYear?: number;
+
   @IsString()
   @IsOptional()
   coverImage?: string;
 
   @IsInt()
-  @IsOptional()
   @Min(1)
+  @IsOptional()
   @Type(() => Number)
   totalCopies?: number;
 

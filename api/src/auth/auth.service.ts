@@ -22,11 +22,14 @@ export class AuthService {
     }
 
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
+    const assignedRole = registerDto.role || Role.MEMBER;
+
     const user = await this.prisma.user.create({
       data: {
         email: registerDto.email,
         password: hashedPassword,
-        role: registerDto.role || Role.PATRON,
+        name: registerDto.name,
+        role: assignedRole,
       },
     });
 
@@ -39,6 +42,7 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
+        name: user.name,
         role: user.role,
       },
     };
@@ -65,6 +69,7 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
+        name: user.name,
         role: user.role,
       },
     };

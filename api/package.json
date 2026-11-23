@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "description": "Library Management System Data Layer and API",
   "scripts": {
+    "start": "node dist/src/main.js",
+    "start:dev": "ts-node src/main.ts",
     "build": "tsc",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",

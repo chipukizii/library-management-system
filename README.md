@@ -186,3 +186,53 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
 ```
 
 This service can be injected into any NestJS module or service to perform type-safe queries while ensuring the database connection pool is established on application bootstrap.
+
+---
+
+## API Endpoints & Authentication
+
+The NestJS backend in `api/` provides complete RESTful endpoints for catalog management, search, filtering, and role-based access control.
+
+### Authentication & Authorization
+
+All write operations (`POST`, `PATCH`, `DELETE`) on genres and books are protected with `JwtAuthGuard` and `RolesGuard`, restricting mutation access to users with the `LIBRARIAN` role. Requests without a valid Bearer token return `401 Unauthorized`, and authenticated requests from patrons/members return `403 Forbidden`.
+
+#### 1. Auth Module (`/auth`)
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| `POST` | `/auth/register` | Public | Register new patron or librarian with bcrypt password hashing |
+| `POST` | `/auth/login` | Public | Validate credentials and receive JWT `access_token` |
+
+#### 2. Genres Module (`/genres`)
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| `GET` | `/genres` | Public | List all genres with book count aggregates (`_count.books`) |
+| `GET` | `/genres/:id` | Public | Retrieve single genre with associated books (404 if not found) |
+| `POST` | `/genres` | Librarian | Create a new genre category |
+| `PATCH` | `/genres/:id` | Librarian | Update an existing genre name, description, or slug |
+| `DELETE` | `/genres/:id` | Librarian | Remove a genre category by ID |
+
+#### 3. Books Module (`/books`)
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| `GET` | `/books` | Public | Query catalog books with pagination (`page`, `limit`), filtering (`genreId`), and case-insensitive search (`search` across title, author, and isbn). Returns `{ data, meta: { total, page, limit, totalPages } }` |
+| `GET` | `/books/:id` | Public | Retrieve single book details with related `genre` |
+| `POST` | `/books` | Librarian | Add a new book to the catalog (status `201 Created`) |
+| `PATCH` | `/books/:id` | Librarian | Update book metadata or copy counts |
+| `DELETE` | `/books/:id` | Librarian | Delete a book record by ID |
+
+#### 4. Users Profile (`/users`)
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| `GET` | `/users/profile` | Authenticated | Retrieve authenticated user profile from JWT claims |
+
+---
+
+## Postman Collection
+
+A complete Postman v2.1 collection is available at `api/postman_collection.json` and `postman_collection.json`. It includes configured requests, automated environment variable extraction (`{{token}}`, `{{librarian_token}}`, `{{patron_token}}`, `{{genre_id}}`, `{{book_id}}`), and tests validating:
+- Authentication & JWT issuance
+- Public catalog browsing, filtering, and search
+- Librarian CRUD operations on books and genres
+- Role-based security guard checks (`401 Unauthorized` and `403 Forbidden`)
+

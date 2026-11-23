@@ -24,6 +24,11 @@ export class CreateBookDto {
   @IsOptional()
   description?: string;
 
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  publishedYear?: number;
+
   @IsString()
   @IsOptional()
   coverImage?: string;

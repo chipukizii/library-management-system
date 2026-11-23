@@ -9,21 +9,28 @@ datasource db {
 
 enum Role {
   PATRON
+  MEMBER
   LIBRARIAN
 }
 
 model User {
-  id       Int    @id @default(autoincrement())
-  email    String @unique
-  password String
-  role     Role   @default(PATRON)
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String?
+  role      Role     @default(PATRON)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 }
 
 model Genre {
-  id    Int    @id @default(autoincrement())
-  name  String @unique
-  slug  String @unique
-  books Book[]
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  slug        String?  @unique
+  description String?
+  books       Book[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
 }
 
 model Book {
@@ -31,11 +38,13 @@ model Book {
   title           String
   author          String
   isbn            String   @unique
-  description     String
+  description     String   @default("")
+  publishedYear   Int?
   coverImage      String?
   totalCopies     Int      @default(1)
   availableCopies Int      @default(1)
   genreId         Int
-  genre           Genre    @relation(fields: [genreId], references: [id])
+  genre           Genre    @relation(fields: [genreId], references: [id], onDelete: Cascade)
   createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
 }

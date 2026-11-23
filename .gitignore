@@ -1,8 +1,11 @@
 node_modules/
 dist/
 .env
+api/.env
 !.env.example
 !client/.env
 !client/.env.example
 !api/.env.example
+!postman_collection.json
+!api/postman_collection.json
 *.log

@@ -2,13 +2,18 @@
   "info": {
     "_postman_id": "a548231c-3b91-4d32-8419-7988357a8291",
     "name": "Library Management System API",
-    "description": "Complete Postman collection for Library Management System catalog CRUD, pagination, filtering, search, authentication (JWT + bcrypt), role-based access control, user profile, and rate limiting.",
+    "description": "Complete Postman v2.1 collection for Library Management System: Auth (JWT + bcrypt), Roles & Guards (LIBRARIAN, MEMBER, PATRON), Genres CRUD, Books CRUD, Case-Insensitive Search, Genre Filtering, Pagination, and Unauthorized/Forbidden Guard Verifications.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "baseUrl",
       "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
       "type": "string"
     },
     {
@@ -37,28 +42,6 @@
       "name": "Auth",
       "item": [
         {
-          "name": "Register - Patron",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"patron_member@library.org\",\n  \"password\": \"patronPass123!\",\n  \"role\": \"PATRON\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/auth/register",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "register"]
-            },
-            "description": "Register a new patron account with bcrypt password hashing."
-          }
-        },
-        {
           "name": "Register - Librarian",
           "request": {
             "method": "POST",
@@ -70,14 +53,36 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"head_librarian@library.org\",\n  \"password\": \"librarianPass123!\",\n  \"role\": \"LIBRARIAN\"\n}"
+              "raw": "{\n  \"email\": \"head_librarian@library.org\",\n  \"name\": \"Head Librarian\",\n  \"password\": \"librarianPass123!\",\n  \"role\": \"LIBRARIAN\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/auth/register",
               "host": ["{{baseUrl}}"],
               "path": ["auth", "register"]
             },
-            "description": "Register an administrative librarian account."
+            "description": "Register an administrative librarian account with bcrypt password hashing."
+          }
+        },
+        {
+          "name": "Register - Member / Patron",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"member_patron@library.org\",\n  \"name\": \"Jane Patron\",\n  \"password\": \"patronPass123!\",\n  \"role\": \"MEMBER\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Register a new patron/member account defaulting or set to MEMBER/PATRON."
           }
         },
         {
@@ -90,6 +95,7 @@
                   "const response = pm.response.json();",
                   "if (response.access_token) {",
                   "  pm.collectionVariables.set('librarian_token', response.access_token);",
+                  "  pm.collectionVariables.set('token', response.access_token);",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -113,11 +119,11 @@
               "host": ["{{baseUrl}}"],
               "path": ["auth", "login"]
             },
-            "description": "Login as librarian to obtain JWT access token (rate-limited via @nestjs/throttler)."
+            "description": "Login as librarian to obtain JWT access token with role LIBRARIAN."
           }
         },
         {
-          "name": "Login - Patron",
+          "name": "Login - Member / Patron",
           "event": [
             {
               "listen": "test",
@@ -142,42 +148,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"patron_member@library.org\",\n  \"password\": \"patronPass123!\"\n}"
+              "raw": "{\n  \"email\": \"member_patron@library.org\",\n  \"password\": \"patronPass123!\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/auth/login",
               "host": ["{{baseUrl}}"],
               "path": ["auth", "login"]
             },
-            "description": "Login as patron to obtain JWT access token."
-          }
-        }
-      ]
-    },
-    {
-      "name": "Users",
-      "item": [
-        {
-          "name": "Get Profile",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{librarian_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/users/profile",
-              "host": ["{{baseUrl}}"],
-              "path": ["users", "profile"]
-            },
-            "description": "Stretch task: Read authenticated user profile via @Req() from the JWT token."
+            "description": "Login as patron/member to obtain JWT access token."
           }
         }
       ]
@@ -186,7 +164,7 @@
       "name": "Genres",
       "item": [
         {
-          "name": "Create Genre",
+          "name": "Create Genre (Librarian Only)",
           "event": [
             {
               "listen": "test",
@@ -202,6 +180,16 @@
             }
           ],
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{librarian_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
             "header": [
               {
@@ -211,18 +199,18 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Cyberpunk Fiction\",\n  \"slug\": \"cyberpunk-fiction\"\n}"
+              "raw": "{\n  \"name\": \"Cyberpunk Fiction\",\n  \"description\": \"Subgenre of science fiction in a dystopian futuristic setting\",\n  \"slug\": \"cyberpunk-fiction\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/genres",
               "host": ["{{baseUrl}}"],
               "path": ["genres"]
             },
-            "description": "Create a new genre category with validated DTO."
+            "description": "Create a new genre category with validated DTO. Protected by JwtAuthGuard and RolesGuard(Role.LIBRARIAN)."
           }
         },
         {
-          "name": "Get All Genres",
+          "name": "Get All Genres (Public)",
           "request": {
             "method": "GET",
             "header": [],
@@ -231,11 +219,11 @@
               "host": ["{{baseUrl}}"],
               "path": ["genres"]
             },
-            "description": "Retrieve all genres along with book counts."
+            "description": "Public endpoint to retrieve all genres along with book counts (_count: { books: true })."
           }
         },
         {
-          "name": "Get Genre By ID",
+          "name": "Get Genre By ID (Public)",
           "request": {
             "method": "GET",
             "header": [],
@@ -244,12 +232,22 @@
               "host": ["{{baseUrl}}"],
               "path": ["genres", "{{genre_id}}"]
             },
-            "description": "Retrieve a single genre by ID with related books."
+            "description": "Public endpoint to retrieve a single genre by ID with related books. Returns 404 if not found."
           }
         },
         {
-          "name": "Update Genre",
+          "name": "Update Genre (Librarian Only)",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{librarian_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "PATCH",
             "header": [
               {
@@ -259,19 +257,29 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Cyberpunk & High Tech\"\n}"
+              "raw": "{\n  \"name\": \"Cyberpunk & High Tech\",\n  \"description\": \"Updated futuristic high-tech dystopian genre\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/genres/{{genre_id}}",
               "host": ["{{baseUrl}}"],
               "path": ["genres", "{{genre_id}}"]
             },
-            "description": "Update an existing genre name and auto-regenerate slug."
+            "description": "Update an existing genre. Protected by JwtAuthGuard and RolesGuard(Role.LIBRARIAN)."
           }
         },
         {
-          "name": "Delete Genre",
+          "name": "Delete Genre (Librarian Only)",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{librarian_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "DELETE",
             "header": [],
             "url": {
@@ -279,7 +287,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["genres", "{{genre_id}}"]
             },
-            "description": "Delete a genre category by ID."
+            "description": "Delete a genre category by ID. Protected by JwtAuthGuard and RolesGuard(Role.LIBRARIAN)."
           }
         }
       ]
@@ -323,7 +331,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Snow Crash\",\n  \"author\": \"Neal Stephenson\",\n  \"isbn\": \"9780553380958\",\n  \"description\": \"In reality, Hiro Protagonist delivers pizza for Uncle Enzo's CosoNostra Pizza Inc., but in the Metaverse he's a warrior prince.\",\n  \"coverImage\": \"https://images.example.com/snow-crash.jpg\",\n  \"totalCopies\": 4,\n  \"availableCopies\": 4,\n  \"genreId\": 5\n}"
+              "raw": "{\n  \"title\": \"Snow Crash\",\n  \"author\": \"Neal Stephenson\",\n  \"isbn\": \"9780553380958\",\n  \"description\": \"In reality, Hiro Protagonist delivers pizza for Uncle Enzo's CosoNostra Pizza Inc., but in the Metaverse he is a warrior prince.\",\n  \"publishedYear\": 1992,\n  \"coverImage\": \"https://images.example.com/snow-crash.jpg\",\n  \"totalCopies\": 4,\n  \"availableCopies\": 4,\n  \"genreId\": 1\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/books",
@@ -343,7 +351,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["books"]
             },
-            "description": "Retrieve default paginated list of books."
+            "description": "Public endpoint retrieving paginated books with { data, meta: { total, page, limit, totalPages } }."
           }
         },
         {
@@ -366,11 +374,11 @@
                 }
               ]
             },
-            "description": "Read paginated books using skip and take."
+            "description": "Read paginated books using page and limit query params."
           }
         },
         {
-          "name": "Get All Books - Search (Title or Author)",
+          "name": "Get All Books - Search (Title, Author, ISBN)",
           "request": {
             "method": "GET",
             "header": [],
@@ -385,7 +393,7 @@
                 }
               ]
             },
-            "description": "Case-insensitive search across title and author."
+            "description": "Case-insensitive search across title, author, and isbn."
           }
         },
         {
@@ -394,13 +402,13 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/books?genreId=7",
+              "raw": "{{baseUrl}}/books?genreId=1",
               "host": ["{{baseUrl}}"],
               "path": ["books"],
               "query": [
                 {
                   "key": "genreId",
-                  "value": "7"
+                  "value": "1"
                 }
               ]
             },
@@ -413,17 +421,17 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/books?genreId=5&search=Dune&page=1&limit=10",
+              "raw": "{{baseUrl}}/books?genreId=1&search=Hobbit&page=1&limit=10",
               "host": ["{{baseUrl}}"],
               "path": ["books"],
               "query": [
                 {
                   "key": "genreId",
-                  "value": "5"
+                  "value": "1"
                 },
                 {
                   "key": "search",
-                  "value": "Dune"
+                  "value": "Hobbit"
                 },
                 {
                   "key": "page",
@@ -435,11 +443,11 @@
                 }
               ]
             },
-            "description": "Combined query with genreId filtering, title/author search, and pagination."
+            "description": "Combined query with genreId filtering, title/author/isbn search, and pagination."
           }
         },
         {
-          "name": "Get Book By ID",
+          "name": "Get Book By ID (Public)",
           "request": {
             "method": "GET",
             "header": [],
@@ -448,7 +456,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["books", "{{book_id}}"]
             },
-            "description": "Retrieve single book details including genre relation."
+            "description": "Public endpoint retrieving single book details including genre relation. Returns 404 if missing."
           }
         },
         {
@@ -504,6 +512,147 @@
               "path": ["books", "{{book_id}}"]
             },
             "description": "Delete a book record from catalog. Guarded by JwtAuthGuard and RolesGuard(Role.LIBRARIAN)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{librarian_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "profile"]
+            },
+            "description": "Read authenticated user profile via JWT token."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Role Guards & Security Tests",
+      "item": [
+        {
+          "name": "Create Book - Unauthorized (Missing Token -> 401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Unauthorized Book\",\n  \"author\": \"Hacker\",\n  \"isbn\": \"9789999999999\",\n  \"totalCopies\": 1,\n  \"genreId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/books",
+              "host": ["{{baseUrl}}"],
+              "path": ["books"]
+            },
+            "description": "Asserts 401 Unauthorized when attempting to create a book without a Bearer token."
+          }
+        },
+        {
+          "name": "Create Book - Forbidden (Member Token -> 403)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{patron_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Forbidden Book\",\n  \"author\": \"Member\",\n  \"isbn\": \"9788888888888\",\n  \"totalCopies\": 1,\n  \"genreId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/books",
+              "host": ["{{baseUrl}}"],
+              "path": ["books"]
+            },
+            "description": "Asserts 403 Forbidden when a user with role MEMBER/PATRON attempts to create a book."
+          }
+        },
+        {
+          "name": "Create Genre - Unauthorized (Missing Token -> 401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Unauthorized Genre\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/genres",
+              "host": ["{{baseUrl}}"],
+              "path": ["genres"]
+            },
+            "description": "Asserts 401 Unauthorized when attempting to create a genre without a Bearer token."
+          }
+        },
+        {
+          "name": "Create Genre - Forbidden (Member Token -> 403)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{patron_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Forbidden Genre\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/genres",
+              "host": ["{{baseUrl}}"],
+              "path": ["genres"]
+            },
+            "description": "Asserts 403 Forbidden when a non-librarian member tries to create a genre."
           }
         }
       ]
